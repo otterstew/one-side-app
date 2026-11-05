@@ -570,10 +570,15 @@ a.o-card:hover{filter:brightness(.98)}
    so it can be installed as its own app on Android. On first open it asks the old address
    for what it had saved in this browser (access key, settings, offline data) and copies it
    across, without overwriting anything already here. The old address answers only this
-   exact address. Added by publish-apps.py; not in the source page. */
+   exact address. Added by publish-apps.py; not in the source page.
+   After the first run it runs again whenever the Open Brain access key is missing here
+   (a first run that found nothing, or a key cleared later), so the app never stays locked
+   while the catalog has the key. 'ob.keyStop' (set by the app's Lock button) stops that. */
 (function () {
-  var FLAG = 'ob.handover.v1', FROM = 'https://openbrain.thewishingstream.com';
-  try { if (localStorage.getItem(FLAG)) return; } catch (e) { return; }
+  var FLAG = 'ob.handover.v1', FROM = 'https://openbrain.thewishingstream.com', KEY = "openbrain.accessKey";
+  try {
+    if (localStorage.getItem(FLAG) && !(KEY && !localStorage.getItem(KEY) && !localStorage.getItem('ob.keyStop'))) return;
+  } catch (e) { return; }
   function start() {
     var f = document.createElement('iframe'), done = false;
     f.hidden = true; f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.title = 'Handover';
@@ -644,7 +649,7 @@ a.o-card:hover{filter:brightness(.98)}
 
 <form class="lock" id="lock" autocomplete="off" hidden>
   <h1>One Side</h1>
-  <p>Enter your Open Brain access key. It’s kept in this browser only, shared with the catalog and AI Desk on this site.</p>
+  <p>Enter your Open Brain access key. It’s kept in this browser only. If the catalog in this browser has it, One Side picks it up from there by itself.</p>
   <input type="password" id="keyIn" aria-label="Access key" placeholder="Access key" autocomplete="off">
   <button class="primary" type="submit" id="keyBtn">Open</button>
   <span class="err" id="lockErr" role="alert"></span>
@@ -1099,8 +1104,8 @@ a.o-card:hover{filter:brightness(.98)}
   $("addBtn").addEventListener("click", () => openSheet(null));
   $("refreshBtn").addEventListener("click", refresh);
   $("lockBtn").addEventListener("click", () => {
-    if (!confirm("Remove the access key from this browser? The catalog and AI Desk on this site will lock too.")) return;
-    store.del(KEY_STORAGE); accessKey = ""; meetings = []; showLock("");
+    if (!confirm("Remove the access key from One Side in this browser? The catalog keeps its own copy.")) return;
+    store.del(KEY_STORAGE); store.set("ob.keyStop", "1"); accessKey = ""; meetings = []; showLock("");
   });
 
   document.addEventListener("keydown", (e) => {
@@ -1275,7 +1280,7 @@ a.o-card:hover{filter:brightness(.98)}
     const k = $("keyIn").value.trim();
     if (!k) return;
     accessKey = k;
-    store.set(KEY_STORAGE, k);
+    store.set(KEY_STORAGE, k); store.del("ob.keyStop");
     $("keyIn").value = "";
     start();
   });
