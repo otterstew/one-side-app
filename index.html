@@ -1002,7 +1002,9 @@ a.o-card:hover{filter:brightness(.98)}
       '<button type="button" class="mtg" data-id="' + esc(m.id) + '" aria-pressed="' + (m.id === meetingId) + '">' +
       '<span class="when">' + esc(m.time || "Any time") + " · " + m.cards.length + (m.cards.length === 1 ? " card" : " cards") + "</span>" +
       '<span class="name">' + esc(m.name) + "</span></button>").join("");
-    $("meetings").hidden = !list.length;
+    // One meeting that day: the card already names it, so the picker is just
+    // in the way while presenting (12 Nov 2026). Show it only to choose.
+    $("meetings").hidden = list.length < 2;
     const on = $("meetings").querySelector('[aria-pressed="true"]');
     if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", inline: "nearest" });
 
